@@ -1,0 +1,59 @@
+start:
+    ; set root state & init root touched
+    0xABCDEFn => SR
+    :CALL(initTouchedTree)
+
+    ; check touched root is 0
+    $ => A          :MLOAD(touchedSR)
+    0               :ASSERT
+
+    ; set address
+    0x0123456789012345678901234567890123456789n => A
+    ; if the address is cold [0 if warm, 1 if cold]
+    ; cold address
+                    :CALL(isColdAddress)
+    D => A
+    1               :ASSERT
+
+    ; warm address
+    0x0123456789012345678901234567890123456789n => A
+                    :CALL(isColdAddress)
+    D => A
+    0               :ASSERT
+
+    ; set address & storage position
+    0x0123456789012345678901234567890123456789n => A
+    0xAn => C
+    ; if the storage slot is cold [0 if warm, 1 if cold]
+    ; cold slot and mark it as warm
+                    :CALL(isColdSlot)
+    1               :ASSERT
+
+    ; warm slot
+    0x0123456789012345678901234567890123456789n => A
+    0xAn => C
+                    :CALL(isColdSlot)
+    0               :ASSERT
+
+    ; warm precompiled
+    0x3n => A
+                    :CALL(isColdAddress)
+    D => A
+    0               :ASSERT
+
+    ; cold zero address
+    0x0n => A
+                    :CALL(isColdAddress)
+    D => A
+    1               :ASSERT
+
+    ; warm zero address
+    0x0n => A
+                    :CALL(isColdAddress)
+    D => A
+    0               :ASSERT
+
+    0 => A,B,C,D,E,CTX, SP, PC, GAS,  SR, HASHPOS, RR ; Set all registers to 0
+                                                                        :JMP(finalizeExecution)
+
+INCLUDE "../main/main.zkasm"
